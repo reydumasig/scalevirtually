@@ -1,29 +1,64 @@
-const Podio = require('podio-js');
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Employee Profiles</title>
+  </head>
+  <body>
+    <div id="data-container"></div>
 
-// Set up authentication using your Podio API key and secret
-const podio = new Podio({
-  authType: 'client',
-  clientId: 'YOUR_CLIENT_ID',
-  clientSecret: 'YOUR_CLIENT_SECRET'
-});
+    <script>
+      const API_URL = 'https://api.podio.com';
+      const CLIENT_ID = '201-dashboard';
+      const CLIENT_SECRET = 'jZqj6rXveZgLNhPDIsDupL25Cl4BXS2sCEMK7COpabwA7fFu4T5h5ep8xuhecZJO';
+      const APP_ID = '25161212';
+      const APP_TOKEN = '2224bae67c6743159433bc508389fe92';
+      const authHeaders = {
+        'Authorization': 'Basic ' + btoa(CLIENT_ID + ':' + CLIENT_SECRET),
+        'Content-Type': 'application/x-www-form-urlencoded'
+      };
 
-// Authenticate with Podio's API
-podio.authenticateWithApp('YOUR_APP_ID', 'YOUR_APP_TOKEN')
-  .then(() => {
-    // Fetch all items in the app
-    return podio.request('GET', `/item/app/YOUR_APP_ID/`);
-  })
-  .then(response => {
-    // Display the items in the data container
-    const dataContainer = document.getElementById('data-container');
-    const items = response.body.items;
-    items.forEach(item => {
-      const itemDiv = document.createElement('div');
-      itemDiv.textContent = `Item ${item.item_id}: ${item.title}`;
-      dataContainer.appendChild(itemDiv);
-    });
-  })
-  .catch(error => {
-    // Handle any errors that occur
-    console.error(error);
-  });
+      // Authenticate with Podio's API using your app ID and app token
+      let accessToken;
+      fetch(`${API_URL}/oauth/token`, {
+        method: 'POST',
+        headers: authHeaders,
+        body: `grant_type=app&app_id=${APP_ID}&app_token=${APP_TOKEN}`,
+        mode: 'cors'
+      })
+      .then(response => response.json())
+      .then(data => {
+        accessToken = data.access_token;
+
+        // Fetch all items in the app
+        const itemsUrl = `${API_URL}/item/app/${APP_ID}/`;
+        return fetch(itemsUrl, {
+          headers: { 'Authorization': `OAuth2 ${accessToken}` }
+        });
+      })
+      .then(itemsResponse => itemsResponse.json())
+      .then(itemsData => {
+        // Display the employee profiles in the data container
+        const dataContainer = document.getElementById('data-container');
+        const items = itemsData.items;
+        items.forEach(item => {
+          const name = item.fields.find(field => field.external_id === 'name').values[0].value;
+          const address = item.fields.find(field => field.external_id === 'address').values[0].value;
+          const email = item.fields.find(field => field.external_id === 'email').values[0].value;
+
+          const profileDiv = document.createElement('div');
+          profileDiv.innerHTML = `
+            <h2>${name}</h2>
+            <p>Address: ${address}</p>
+            <p>Email: ${email}</p>
+          `;
+
+          dataContainer.appendChild(profileDiv);
+        });
+      })
+      .catch(error => {
+        // Handle any errors that occur
+        console.error(error);
+      });
+    </script>
+  </body>
+</html>

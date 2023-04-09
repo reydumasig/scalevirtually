@@ -40,17 +40,18 @@
           // Display the employee profiles in the data container
           const dataContainer = document.getElementById('data-container');
           const items = itemsData.items;
+          const userEmail = "rey@scalevirtuall.com"; // replace with actual user email
           items.forEach(item => {
-            const name = item.fields.find(field => field.external_id === 'first-name').values[0].value;
             const sv_email = item.fields.find(field => field.external_id === 'scale-virtually-email').values[0].value;
-
-            const profileDiv = document.createElement('div');
-            profileDiv.innerHTML = `
-              <h2>${name}</h2>
-              <p>Email: ${sv_email}</p>
-            `;
-
-            dataContainer.appendChild(profileDiv);
+            if (sv_email === userEmail) {
+              const name = item.fields.find(field => field.external_id === 'first-name').values[0].value;
+              const profileDiv = document.createElement('div');
+              profileDiv.innerHTML = `
+                <h2>${name}</h2>
+                <p>Email: ${sv_email}</p>
+              `;
+              dataContainer.appendChild(profileDiv);
+            }
           });
         })
         .catch(error => {
@@ -60,4 +61,3 @@
       </script>
     </body>
 </html>
-

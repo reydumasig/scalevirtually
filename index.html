@@ -30,7 +30,7 @@
           accessToken = data.access_token;
 
           // Fetch all items in the app
-          const itemsUrl = `${API_URL}/item/app/${APP_ID}/`;
+          const itemsUrl = `${API_URL}/item/app/${APP_ID}/?limit=200`;
           return fetch(itemsUrl, {
             headers: { 'Authorization': `OAuth2 ${accessToken}` }
           });

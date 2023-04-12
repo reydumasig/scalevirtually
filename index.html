@@ -6,58 +6,82 @@
   <body>
     <div id="data-container"></div>
 
-      <script>
-        const API_URL = 'https://api.podio.com';
-        const CLIENT_ID = '201-dashboard';
-        const CLIENT_SECRET = 'jZqj6rXveZgLNhPDIsDupL25Cl4BXS2sCEMK7COpabwA7fFu4T5h5ep8xuhecZJO';
-        const APP_ID = '25161212';
-        const APP_TOKEN = '2224bae67c6743159433bc508389fe92';
-        const authHeaders = {
-          'Authorization': 'Basic ' + btoa(CLIENT_ID + ':' + CLIENT_SECRET),
-          'Content-Type': 'application/x-www-form-urlencoded'
-        };
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.2.9/firebase-auth.js"></script>
+    <script>
+      const firebaseConfig = {
+        // Your Firebase config here
+        apiKey: "AIzaSyCsFRoHVecoTTYZqz8S5dyR7p9_oay-P14",
+        authDomain: "sv-201-dashboard.firebaseapp.com",
+        projectId: "sv-201-dashboard",
+        storageBucket: "sv-201-dashboard.appspot.com",
+        messagingSenderId: "988109852383",
+        appId: "1:988109852383:web:bd64850febaa7a8385a36a",
+        measurementId: "G-4C8SR80ZBW"
+      };
 
-        // Authenticate with Podio's API using your app ID and app token
-        let accessToken;
-        fetch(`${API_URL}/oauth/token`, {
-          method: 'POST',
-          headers: authHeaders,
-          body: `grant_type=app&app_id=${APP_ID}&app_token=${APP_TOKEN}`,
-          mode: 'cors'
-        })
-        .then(response => response.json())
-        .then(data => {
-          accessToken = data.access_token;
+      firebase.initializeApp(firebaseConfig);
 
-          // Fetch all items in the app
-          const itemsUrl = `${API_URL}/item/app/${APP_ID}/?limit=200`;
-          return fetch(itemsUrl, {
-            headers: { 'Authorization': `OAuth2 ${accessToken}` }
+      firebase.auth().signInWithPopup(new firebase.auth.GoogleAuthProvider())
+        .then((result) => {
+          const user = result.user;
+          const userEmail = user.email;
+
+          const API_URL = 'https://api.podio.com';
+          const CLIENT_ID = '201-dashboard';
+          const CLIENT_SECRET = 'jZqj6rXveZgLNhPDIsDupL25Cl4BXS2sCEMK7COpabwA7fFu4T5h5ep8xuhecZJO';
+          const APP_ID = '25161212';
+          const APP_TOKEN = '2224bae67c6743159433bc508389fe92';
+          const authHeaders = {
+            'Authorization': 'Basic ' + btoa(CLIENT_ID + ':' + CLIENT_SECRET),
+            'Content-Type': 'application/x-www-form-urlencoded'
+          };
+
+          // Authenticate with Podio's API using your app ID and app token
+          let accessToken;
+          fetch(`${API_URL}/oauth/token`, {
+            method: 'POST',
+            headers: authHeaders,
+            body: `grant_type=app&app_id=${APP_ID}&app_token=${APP_TOKEN}`,
+            mode: 'cors'
+          })
+          .then(response => response.json())
+          .then(data => {
+            accessToken = data.access_token;
+
+            // Fetch all items in the app
+            const itemsUrl = `${API_URL}/item/app/${APP_ID}/?limit=200`;
+            return fetch(itemsUrl, {
+              headers: { 'Authorization': `OAuth2 ${accessToken}` }
+            });
+          })
+          .then(itemsResponse => itemsResponse.json())
+          .then(itemsData => {
+            // Display the employee profiles in the data container
+            const dataContainer = document.getElementById('data-container');
+            const items = itemsData.items;
+
+            items.forEach(item => {
+              const sv_email = item.fields.find(field => field.external_id === 'scale-virtually-email').values[0].value;
+              if (sv_email === userEmail) {
+                const name = item.fields.find(field => field.external_id === 'first-name').values[0].value;
+                const profileDiv = document.createElement('div');
+                profileDiv.innerHTML = `
+                  <h2>${name}</h2>
+                  <p>Email: ${sv_email}</p>
+                `;
+                dataContainer.appendChild(profileDiv);
+              }
+            });
+          })
+          .catch(error => {
+            // Handle any errors that occur
+            console.error(error);
           });
         })
-        .then(itemsResponse => itemsResponse.json())
-        .then(itemsData => {
-          // Display the employee profiles in the data container
-          const dataContainer = document.getElementById('data-container');
-          const items = itemsData.items;
-          const userEmail = "cheryl@scalevirtually.com"; // replace with actual user email
-          items.forEach(item => {
-            const sv_email = item.fields.find(field => field.external_id === 'scale-virtually-email').values[0].value;
-            if (sv_email === userEmail) {
-              const name = item.fields.find(field => field.external_id === 'first-name').values[0].value;
-              const profileDiv = document.createElement('div');
-              profileDiv.innerHTML = `
-                <h2>${name}</h2>
-                <p>Email: ${sv_email}</p>
-              `;
-              dataContainer.appendChild(profileDiv);
-            }
-          });
-        })
-        .catch(error => {
-          // Handle any errors that occur
+        .catch((error) => {
           console.error(error);
         });
-      </script>
-    </body>
+    </script>
+  </body>
 </html>
